@@ -65,7 +65,7 @@ Theta2_grad = zeros(size(Theta2));
 eye_matrix = eye(num_labels);
 y_matrix = eye_matrix(y, :);
 
-% Part 1 : Without Regularization
+% Part 1 : Cost without Regularization
 A1 = [ones(1, m) ; X'];
 Z2 = Theta1 * A1;
 A2 = sigmoid(Z2);
@@ -76,17 +76,46 @@ Hx = A3';
 J_matrix = (-1 .* y_matrix .* log(Hx)) + ((y_matrix - 1) .* log(1 - Hx));
 J = (sum(sum(J_matrix, 1), 2))/m;
 
-% Part 1 : Add regularization
+% Part 1 : Add regularization to cost
 
 reg_term1 = sum(sum(Theta1(:, 2:size(Theta1, 2)).^2, 1), 2);
 reg_term2 = sum(sum(Theta2(:, 2:size(Theta2, 2)).^2, 1), 2);
 reg_term = ((reg_term1 + reg_term2) * lambda) / (2 * m);
 J = J + reg_term;
 
-% Part 2 : Backpropagation
+% Part 2 : Backpropagation (Vectorized method)
 
+% Step 1 : Feedforward
+a1 = [ones(1, m) ; X'];
+z2 = Theta1 * a1;
+a2 = sigmoid(z2);
+z3 = Theta2 * [ones(1, m) ; a2];
+a3 = sigmoid(z3');
+% Size now is m x num_classes_output_layer
 
+% Step 2 : Output layer gradient
+del3 = a3 - y_matrix;
 
+% Step 3 : Hidden layer gradient
+del2 = ((Theta2(:,2:end))' * del3')' .* sigmoidGradient(z2');
+% I was probably getting the incorrectness because I was multiplying del3 to Theta2 here
+
+% Step 4 : Calculate capital (triangular) deltas
+Delta1 = del2' * a1';
+Delta2 = del3' * [ones(1, m) ; a2]';
+% I was probably getting the incorrectness because I was not initiating ones here
+
+% Step 5 : Final Gradient computation
+Theta1_grad = Delta1 ./ m;
+Theta2_grad = Delta2 ./ m;
+
+% Part 3 : Add regularization to backpropagation
+Reg_terms_1 = Theta1(:, 2:end) .* (lambda/m);
+Reg_terms_2 = Theta2(:, 2:end) .* (lambda/m);
+Regd_terms_1 = Theta1_grad(:, 2:end) + Reg_terms_1;
+Regd_terms_2 = Theta2_grad(:, 2:end) + Reg_terms_2;
+Theta1_grad = [Theta1_grad(:,1) Regd_terms_1];
+Theta2_grad = [Theta2_grad(:,1) Regd_terms_2];
 
 % -------------------------------------------------------------
 

@@ -174,6 +174,7 @@ plotFit(min(X), max(X), mu, sigma, theta, p);
 xlabel('Change in water level (x)');
 ylabel('Water flowing out of the dam (y)');
 title (sprintf('Polynomial Regression Fit (lambda = %f)', lambda));
+pause;
 
 figure(2);
 [error_train, error_val] = ...
